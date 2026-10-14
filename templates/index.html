@@ -1,87 +1,151 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keyword Extraction | NLP Project</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Extraction System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f5fb;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #0001;
+        }
+
+        h1 { color: #3730a3; text-align: center; }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        select, button {
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        select { width: 100%; border: 1px solid #ccc; }
+
+        button {
+            width: 100%;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover { background: #3730a3; }
+
+        .results {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f5f5ff;
+            border-radius: 8px;
+        }
+
+        .error { color: #c62828; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
 </head>
+
 <body>
-  <header class="hero">
-    <div class="eyebrow">NATURAL LANGUAGE PROCESSING · COURSE PROJECT</div>
-    <h1>Keyword <span>Extraction</span></h1>
-    <p>Turn long text into a clear list of important words and phrases.</p>
-  </header>
+<div class="container">
+    <h1>Keyword Extraction System</h1>
+    <p>Enter your text below to extract important keywords.</p>
 
-  <main class="container">
-    <section class="panel">
-      <form method="POST">
-        <label for="text">Enter your text</label>
-        <textarea id="text" name="text" placeholder="Paste a paragraph, abstract, article, or research summary here..." required>{{ text }}</textarea>
-        <div class="controls">
-          <div>
-            <label for="method">Extraction method</label>
-            <select id="method" name="method">
-              <option value="tfidf" {% if method == 'tfidf' %}selected{% endif %}>TF-IDF (ranked terms and phrases)</option>
-              <option value="rake" {% if method == 'rake' %}selected{% endif %}>RAKE-style phrase extraction</option>
-              <option value="frequency" {% if method == 'frequency' %}selected{% endif %}>Word frequency baseline</option>
-            </select>
-          </div>
-          <div>
-            <label for="top_n">Number of keywords</label>
-            <select id="top_n" name="top_n">
-              {% for n in [5, 10, 15, 20, 25] %}
-              <option value="{{ n }}" {% if top_n == n %}selected{% endif %}>{{ n }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <button type="submit">Extract keywords <span>→</span></button>
-      </form>
-      {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    </section>
+    <form method="POST" action="/">
+        <label for="text"><strong>Enter your text:</strong></label>
+        <br><br>
 
-    {% if results %}
-    <section class="results panel">
-      <div class="results-head">
-        <div>
-          <div class="eyebrow">ANALYSIS COMPLETE</div>
-          <h2>Extracted keywords</h2>
-        </div>
-        <span class="count">{{ results|length }} results</span>
-      </div>
-      <div class="keyword-cloud">
-        {% for item in results %}
-        <span class="chip">{{ item.keyword }}</span>
-        {% endfor %}
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Rank</th><th>Keyword / phrase</th><th>Score</th></tr></thead>
-          <tbody>
-            {% for item in results %}
-            <tr><td>{{ loop.index }}</td><td><strong>{{ item.keyword }}</strong></td><td>{{ "%.4f"|format(item.score) }}</td></tr>
+        <textarea id="text" name="text"
+            placeholder="Paste your paragraph, article, or research abstract here..."
+            required>{{ text }}</textarea>
+
+        <label for="method"><strong>Choose extraction method:</strong></label>
+        <select id="method" name="method">
+            <option value="tfidf"
+                {% if method == 'tfidf' %}selected{% endif %}>
+                TF-IDF
+            </option>
+            <option value="rake"
+                {% if method == 'rake' %}selected{% endif %}>
+                RAKE
+            </option>
+            <option value="frequency"
+                {% if method == 'frequency' %}selected{% endif %}>
+                Word Frequency
+            </option>
+        </select>
+
+        <label for="top_n"><strong>Number of keywords:</strong></label>
+        <select id="top_n" name="top_n">
+            {% for n in [5, 10, 15, 20, 25] %}
+            <option value="{{ n }}"
+                {% if top_n == n %}selected{% endif %}>
+                {{ n }} keywords
+            </option>
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <form method="POST" action="{{ url_for('download') }}">
-        <input type="hidden" name="rows" value="{% for item in results %}{{ item.keyword }}&#9;{{ item.score }}{% if not loop.last %}&#10;{% endif %}{% endfor %}">
-        <button class="secondary" type="submit">Download results as CSV ↓</button>
-      </form>
-      <p class="note">Scores are method-specific relevance indicators, not probabilities.</p>
-    </section>
+        </select>
+
+        <button type="submit">Extract Keywords</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
     {% endif %}
 
-    <section class="how panel">
-      <h2>How it works</h2>
-      <div class="steps">
-        <div><b>01</b><strong>Preprocess</strong><p>Lowercase text, normalize punctuation, and remove common stop words where appropriate.</p></div>
-        <div><b>02</b><strong>Score</strong><p>Rank terms using TF-IDF, RAKE-style phrase scores, or a frequency baseline.</p></div>
-        <div><b>03</b><strong>Review</strong><p>Inspect ranked results and export the keywords for your report.</p></div>
-      </div>
-    </section>
-  </main>
-  <footer>Keyword Extraction System · Built with Python, Flask and NLP</footer>
+    {% if results %}
+    <div class="results">
+        <h2>Extracted Keywords</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Keyword</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.keyword }}</td>
+                    <td>{{ item.score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <form method="POST" action="/download">
+            <input type="hidden" name="rows"
+                value="{% for item in results %}{{ item.keyword }}&#9;{{ item.score }}{% if not loop.last %}&#10;{% endif %}{% endfor %}">
+            <button type="submit">Download CSV</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
 </body>
 </html>
